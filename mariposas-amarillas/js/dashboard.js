@@ -146,23 +146,14 @@ function calcularMediaEdad(datos) {
 
 function calcularMedianaEdad(datos) {
   if (!datos.length) return '—';
-  // Contar frecuencia de cada rango directamente
   const conteo = {};
   datos.forEach(r => {
     const edad = (r.edad || '').trim();
     if (edad) conteo[edad] = (conteo[edad] || 0) + 1;
   });
   if (!Object.keys(conteo).length) return '—';
-  // Rango más frecuente
   const moda = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0][0];
-  // Buscar punto medio con coincidencia flexible
-  const pm = PUNTO_MEDIO[moda];
-  if (pm !== undefined) return pm.toFixed(1);
-  // Intentar coincidencia parcial por los números del rango
-  for (const [key, val] of Object.entries(PUNTO_MEDIO)) {
-    if (moda.includes(key) || key.includes(moda)) return val.toFixed(1);
-  }
-  return '—';
+  return PUNTO_MEDIO[moda] !== undefined ? PUNTO_MEDIO[moda].toFixed(1) : '—';
 }
 
 // ===== ① KPIs =====
@@ -193,13 +184,7 @@ function renderKPIs(datos) {
 function renderMedidas(datos) {
   const el = document.getElementById('medidas-edad');
   if (!datos.length) { el.innerHTML = ''; return; }
-  // Diagnóstico visual: mostrar valores exactos en pantalla
-  const edadesUnicas = [...new Set(datos.map(r => r.edad))];
-  const diagEl = document.getElementById('diagnostico-edad') || document.createElement('div');
-  diagEl.id = 'diagnostico-edad';
-  diagEl.style = 'background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px;margin-bottom:1rem;font-size:12px;';
-  diagEl.innerHTML = '<strong>Diagnóstico edades (borrar después):</strong><br>' + edadesUnicas.map(e => `"${e}"`).join('<br>');
-  el.parentElement.insertBefore(diagEl, el);
+
   const freqEdad = calcularFrecuencias(datos, 'edad', ORDEN_EDAD);
   const media    = calcularMediaEdad(datos);
   const mediana  = calcularMedianaEdad(datos);
