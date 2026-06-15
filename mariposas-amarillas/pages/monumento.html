@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>El Monumento · Mariposas Amarillas</title>
+  <link rel="stylesheet" href="../css/styles.css"/>
+  <style>
+    /* === GALERÍA === */
+    .gallery-main {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      background: #000;
+      aspect-ratio: 4/3;
+      position: relative;
+    }
+    .gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.4s;
+    }
+    .gallery-thumbs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 1.25rem;
+    }
+    .gallery-thumbs img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, opacity 0.2s;
+      opacity: 0.7;
+    }
+    .gallery-thumbs img:hover { opacity: 1; }
+    .gallery-thumbs img.active {
+      border-color: #EF9F27;
+      opacity: 1;
+    }
+    .gallery-caption {
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+
+    /* === INFO AMPLIADA === */
+    .info-section {
+      border-left: 3px solid #EF9F27;
+      padding-left: 14px;
+      margin-bottom: 1rem;
+    }
+    .info-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #412402;
+      margin-bottom: 4px;
+    }
+    .info-section p {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.65;
+    }
+
+    /* === LÍNEA DE TIEMPO === */
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px; top: 0; bottom: 0;
+      width: 2px;
+      background: #FAC775;
+    }
+    .tl-item { position: relative; margin-bottom: 16px; }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -17px; top: 5px;
+      width: 10px; height: 10px;
+      background: #EF9F27;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px #EF9F27;
+    }
+    .tl-year {
+      font-size: 11px;
+      font-weight: 700;
+      color: #854F0B;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tl-text {
+      font-size: 13px;
+      color: #444;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Navegación -->
+  <nav class="nav-bar">
+    <span class="site-name">🦋 Mariposas Amarillas</span>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link">Inicio</a>
+      <a href="monumento.html" class="nav-link active">Monumento</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero-header">
+    <div class="hero-icon">🦋</div>
+    <h1>Mariposas Amarillas de Mauricio Babilonia</h1>
+    <p class="hero-sub">Monumento cultural · Riohacha, La Guajira</p>
+    <span class="badge">Homenaje a Gabriel García Márquez</span>
+  </div>
+
+  <!-- Audio resumen -->
+  <div class="card" style="text-align:center;">
+    <p class="section-head" style="justify-content:center;">🎙️ Escucha el resumen del monumento</p>
+    <p style="font-size:13px; color:#888; margin-bottom:1rem;">Narración en audio · 1 min aprox.</p>
+
+    <audio id="audio-resumen" src="../resumen.mp3" preload="metadata"></audio>
+
+    <div style="display:flex; align-items:center; gap:12px; background:#faeeda; border-radius:12px; padding:14px 16px;">
+      <button id="btn-play" onclick="toggleAudio()" style="
+        width:48px; height:48px; border-radius:50%; border:none;
+        background:#854F0B; color:#fff; font-size:20px; cursor:pointer;
+        flex-shrink:0; display:flex; align-items:center; justify-content:center;
+        transition: background 0.15s;">▶</button>
+
+      <div style="flex:1; min-width:0;">
+        <div style="background:#e8d5b0; border-radius:4px; height:6px; cursor:pointer; position:relative;" onclick="buscarAudio(event, this)">
+          <div id="barra-progreso" style="background:#854F0B; height:6px; border-radius:4px; width:0%; transition:width 0.3s;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:5px;">
+          <span id="tiempo-actual" style="font-size:11px; color:#854F0B;">0:00</span>
+          <span id="tiempo-total"  style="font-size:11px; color:#854F0B;">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const audio   = document.getElementById('audio-resumen');
+      const btnPlay = document.getElementById('btn-play');
+      const barra   = document.getElementById('barra-progreso');
+      const tActual = document.getElementById('tiempo-actual');
+      const tTotal  = document.getElementById('tiempo-total');
+
+      function fmt(s) {
+        const m = Math.floor(s / 60);
+        const seg = Math.floor(s % 60);
+        return m + ':' + (seg < 10 ? '0' : '') + seg;
+      }
+
+      audio.addEventListener('loadedmetadata', () => {
+        tTotal.textContent = fmt(audio.duration);
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+        barra.style.width = pct + '%';
+        tActual.textContent = fmt(audio.currentTime);
+      });
+
+      audio.addEventListener('ended', () => {
+        btnPlay.textContent = '▶';
+        barra.style.width = '0%';
+        tActual.textContent = '0:00';
+        audio.currentTime = 0;
+      });
+
+      function toggleAudio() {
+        if (audio.paused) {
+          audio.play();
+          btnPlay.textContent = '⏸';
+        } else {
+          audio.pause();
+          btnPlay.textContent = '▶';
+        }
+      }
+
+      function buscarAudio(e, barra) {
+        const rect = barra.getBoundingClientRect();
+        const pct  = (e.clientX - rect.left) / rect.width;
+        audio.currentTime = pct * audio.duration;
+      }
+    </script>
+  </div>
+
+  <!-- Galería fotográfica -->
+  <div class="card">
+    <p class="section-head">📷 Galería fotográfica</p>
+    <div class="gallery-main">
+      <img id="main-img" src="../img1.png" alt="Monumento Mariposas Amarillas"/>
+    </div>
+    <div class="gallery-thumbs">
+      <img src="../img1.png" class="active" onclick="cambiarImg(this,'../img1.png')" alt="Vista 1"/>
+      <img src="../img2.png" onclick="cambiarImg(this,'../img2.png')" alt="Vista 2"/>
+      <img src="../img3.png" onclick="cambiarImg(this,'../img3.png')" alt="Vista 3"/>
+      <img src="../img4.png" onclick="cambiarImg(this,'../img4.png')" alt="Vista nocturna"/>
+      <img src="../img5.png" onclick="cambiarImg(this,'../img5.png')" alt="Detalle"/>
+    </div>
+    <p class="gallery-caption">Monumento Mariposas Amarillas · Riohacha, La Guajira, Colombia</p>
+  </div>
+
+  <!-- Ficha técnica -->
+  <div class="info-grid">
+    <div class="info-tile">
+      <p class="tile-label">Autora</p>
+      <p class="tile-val">Johana Cerchar Henao</p>
+    </div>
+    <div class="info-tile">
+      <p class="tile-label">Inauguración</p>
+      <p class="tile-val">2016 — Hay Festival</p>
+    </div>
+    <div class="info-tile">
+      <p class="tile-label">Ubicación</p>
+      <p class="tile-val">Parque Los Cañones, Riohacha</p>
+    </div>
+    <div class="info-tile">
+      <p class="tile-label">Apoyo institucional</p>
+      <p class="tile-val">Gobernación de La Guajira · Cerrejón</p>
+    </div>
+  </div>
+
+  <!-- Información general -->
+  <div class="card">
+    <p class="section-head">🌟 Sobre el monumento</p>
+    <div class="info-section">
+      <h3>Un símbolo del realismo mágico</h3>
+      <p>
+        El Monumento Mariposas Amarillas es uno de los referentes culturales y
+        turísticos más representativos de la ciudad de Riohacha, capital del
+        departamento de La Guajira. Esta obra artística está inspirada en las
+        famosas mariposas amarillas descritas en <em>Cien años de soledad</em>,
+        una de las obras más importantes de la literatura latinoamericana,
+        escrita por Gabriel García Márquez.
+      </p>
+    </div>
+    <div class="info-section">
+      <h3>Conexión con la novela</h3>
+      <p>
+        Las mariposas amarillas son reconocidas mundialmente como un símbolo del
+        realismo mágico, corriente literaria que combina elementos fantásticos
+        con situaciones de la vida cotidiana. En la novela, estas mariposas
+        acompañan constantemente al personaje Mauricio Babilonia, convirtiéndose
+        en una imagen inolvidable para millones de lectores alrededor del mundo.
+      </p>
+    </div>
+    <div class="info-section">
+      <h3>Atractivo turístico</h3>
+      <p>
+        Ubicado en una de las zonas más visitadas de la ciudad, el monumento
+        atrae diariamente a residentes y turistas nacionales e internacionales
+        que desean conocer más sobre la cultura colombiana. Su diseño llamativo
+        y colorido lo convierte en un punto de referencia dentro de los
+        recorridos turísticos de la capital guajira.
+      </p>
+    </div>
+  </div>
+
+  <!-- Reseña histórica -->
+  <div class="card">
+    <p class="section-head">📖 Reseña histórica</p>
+    <p>
+      La obra surgió del imaginario de la artista Johana Cerchar desde su infancia,
+      cuando escuchaba la canción <em>"Vallenato Nobel"</em> de Poncho Zuleta — amigo
+      de su padre — que aludía a las mariposas amarillas del personaje Mauricio
+      Babilonia en <em>Cien años de soledad</em>.
+    </p>
+    <br/>
+    <p>
+      La escultura fue concebida como homenaje al Nobel colombiano Gabriel García
+      Márquez y a la profunda conexión de su obra con La Guajira, donde los padres
+      de Gabo vivieron su luna de miel. Fue inaugurada en Riohacha en 2016, en el
+      marco del Hay Festival, impulsando el turismo literario en la región.
+    </p>
+    <div class="quote-block">
+      <p class="quote-text">
+        "Es Riohacha donde deben estar las Mariposas Amarillas de Mauricio Babilonia,
+        porque es la cimiente de carne y de sangre de su linaje materno."
+      </p>
+      <p class="quote-attr">— Johana Cerchar Henao, autora</p>
+    </div>
+  </div>
+
+  <!-- Línea de tiempo -->
+  <div class="card">
+    <p class="section-head">🕐 Línea de tiempo</p>
+    <div class="timeline">
+      <div class="tl-item">
+        <p class="tl-year">1967</p>
+        <p class="tl-text">Publicación de <em>Cien años de soledad</em> por Gabriel García Márquez, donde aparece el personaje Mauricio Babilonia rodeado de mariposas amarillas.</p>
+      </div>
+      <div class="tl-item">
+        <p class="tl-year">2014</p>
+        <p class="tl-text">Fallece Gabriel García Márquez. Su legado literario impulsa proyectos culturales en todo Colombia, especialmente en La Guajira.</p>
+      </div>
+      <div class="tl-item">
+        <p class="tl-year">2016</p>
+        <p class="tl-text">Johana Cerchar Henao inaugura el monumento en el marco del Hay Festival de Riohacha, con apoyo de la Gobernación de La Guajira y Cerrejón.</p>
+      </div>
+      <div class="tl-item">
+        <p class="tl-year">Hoy</p>
+        <p class="tl-text">Es uno de los lugares más fotografiados de la ciudad y punto de inicio de la Ruta Gabo en Riohacha, un recorrido turístico literario.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de información -->
+  <div id="modal-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:999; align-items:center; justify-content:center; padding:1rem;">
+    <div id="modal-box" style="background:#fff; border-radius:16px; padding:1.5rem; max-width:480px; width:100%; position:relative; max-height:85vh; overflow-y:auto;">
+      <button onclick="cerrarModal()" style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:20px; cursor:pointer; color:#888; line-height:1;">✕</button>
+      <p id="modal-emoji" style="font-size:36px; text-align:center; margin-bottom:8px;"></p>
+      <h3 id="modal-titulo" style="font-size:17px; font-weight:700; color:#412402; margin-bottom:10px; text-align:center;"></h3>
+      <p id="modal-texto" style="font-size:14px; color:#444; line-height:1.7;"></p>
+    </div>
+  </div>
+
+  <!-- Significado cultural -->
+  <div class="card">
+    <p class="section-head">✨ Significado cultural</p>
+    <p>
+      Las mariposas amarillas son uno de los símbolos más reconocibles del realismo
+      mágico de García Márquez: en <em>Cien años de soledad</em> acompañan siempre
+      al personaje Mauricio Babilonia. El monumento conecta este universo literario
+      con el territorio guajiro.
+    </p>
+    <br/>
+    <p>
+      En la cosmovisión Wayuu, las mariposas amarillas representan el último
+      peregrinaje de las mujeres fallecidas sobre la tierra, otorgando al monumento
+      un doble significado: <strong>literario e indígena</strong>.
+    </p>
+    <br/>
+    <p>
+      Además de su valor artístico, el monumento representa la unión entre la
+      literatura, la cultura y la identidad caribeña. La obra busca promover el
+      conocimiento de las expresiones culturales colombianas y fortalecer el
+      sentido de pertenencia de la comunidad hacia su patrimonio.
+    </p>
+    <p style="font-size:12px; color:#aaa; margin-top:1rem; margin-bottom:8px;">Toca un tema para saber más 👇</p>
+    <div class="tag-row">
+      <button class="tag-btn-info" onclick="abrirModal('realismo')">📚 Realismo mágico</button>
+      <button class="tag-btn-info" onclick="abrirModal('garcia')">✍️ García Márquez</button>
+      <button class="tag-btn-info" onclick="abrirModal('wayuu')">🦋 Cosmovisión Wayuu</button>
+      <button class="tag-btn-info" onclick="abrirModal('turismo')">🗺️ Turismo literario</button>
+      <button class="tag-btn-info" onclick="abrirModal('cien')">📖 Cien años de soledad</button>
+      <button class="tag-btn-info" onclick="abrirModal('patrimonio')">🏛️ Patrimonio cultural</button>
+    </div>
+  </div>
+
+  <style>
+    .tag-btn-info {
+      background: #faeeda;
+      border: 1.5px solid #EF9F27;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #633806;
+      padding: 6px 13px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .tag-btn-info:hover {
+      background: #EF9F27;
+      color: #fff;
+      transform: scale(1.04);
+    }
+    #modal-overlay { display: none; }
+    #modal-overlay.visible { display: flex; }
+  </style>
+
+  <script>
+    const INFO = {
+      realismo: {
+        emoji: '📚',
+        titulo: 'Realismo mágico',
+        texto: 'El realismo mágico es una corriente literaria y artística que mezcla elementos fantásticos o sobrenaturales con situaciones completamente cotidianas, presentándolos como si fueran parte normal de la realidad. Surgió en América Latina durante el siglo XX y su máximo representante es el escritor colombiano Gabriel García Márquez. En esta corriente, los milagros, los presagios y los seres míticos conviven con la vida diaria sin que los personajes se sorprendan. Las mariposas amarillas que rodean a Mauricio Babilonia en "Cien años de soledad" son uno de los ejemplos más icónicos de este estilo: un fenómeno inexplicable que el universo de la novela acepta como natural.'
+      },
+      garcia: {
+        emoji: '✍️',
+        titulo: 'Gabriel García Márquez',
+        texto: 'Gabriel García Márquez (1927–2014), conocido como "Gabo", fue un escritor, periodista y novelista colombiano, considerado uno de los más grandes autores de la literatura universal. Nació en Aracataca, Magdalena, pero sus raíces familiares están profundamente ligadas a La Guajira: sus padres vivieron su luna de miel en Riohacha. Fue galardonado con el Premio Nobel de Literatura en 1982, principalmente por su novela "Cien años de soledad". Su obra marcó el boom latinoamericano y posicionó la cultura del Caribe colombiano ante el mundo entero.'
+      },
+      wayuu: {
+        emoji: '🦋',
+        titulo: 'Cosmovisión Wayuu',
+        texto: 'El pueblo Wayuu es la etnia indígena más numerosa de Colombia y Venezuela, habitante ancestral de la Península de La Guajira. Su cosmovisión es un conjunto de creencias, valores y saberes que explican el origen del mundo y la relación entre los seres vivos. En la tradición Wayuu, las mariposas amarillas tienen un profundo significado espiritual: representan el alma de las mujeres fallecidas en su último peregrinaje sobre la tierra antes de pasar al mundo de los ancestros. Esta creencia otorga al Monumento Mariposas Amarillas un significado doble: literario (García Márquez) e indígena (Wayuu), conectando dos grandes universos culturales de La Guajira.'
+      },
+      turismo: {
+        emoji: '🗺️',
+        titulo: 'Turismo literario',
+        texto: 'El turismo literario es una modalidad de turismo cultural que invita a los viajeros a recorrer lugares relacionados con la vida o la obra de escritores reconocidos. En Riohacha, el Monumento Mariposas Amarillas es el punto de partida oficial de la "Ruta Gabo", un circuito que conecta los sitios de la ciudad vinculados a Gabriel García Márquez y su obra. Este tipo de turismo fortalece la identidad cultural, impulsa la economía local y acerca a los visitantes a la literatura de una manera vivencial y emotiva. La Guajira, gracias a este monumento, se posiciona como un destino clave del turismo literario en Colombia.'
+      },
+      cien: {
+        emoji: '📖',
+        titulo: 'Cien años de soledad',
+        texto: '"Cien años de soledad" (1967) es la obra maestra de Gabriel García Márquez y una de las novelas más leídas e influyentes de la historia. Narra la saga de la familia Buendía a lo largo de siete generaciones en el pueblo ficticio de Macondo. La novela está repleta de imágenes que se han convertido en símbolos universales del realismo mágico, entre ellas las mariposas amarillas que siempre acompañan al personaje Mauricio Babilonia. En 1982 fue citada como razón principal para otorgarle el Nobel de Literatura a García Márquez. En 2024, Netflix lanzó una serie basada en la novela, renovando el interés mundial por la obra y por los lugares relacionados con Gabo, incluida Riohacha.'
+      },
+      patrimonio: {
+        emoji: '🏛️',
+        titulo: 'Patrimonio cultural',
+        texto: 'El patrimonio cultural es el conjunto de bienes, expresiones, tradiciones y manifestaciones que una comunidad hereda de sus antepasados y desea transmitir a las generaciones futuras. Puede ser material (monumentos, edificaciones, objetos) o inmaterial (música, lenguas, rituales, saberes). El Monumento Mariposas Amarillas forma parte del patrimonio cultural de Riohacha porque representa la identidad histórica, literaria e indígena de la ciudad. La Alcaldía de Riohacha y la Gobernación de La Guajira lo promueven activamente como símbolo de la riqueza cultural del Caribe colombiano, y es referente en eventos, celebraciones y material turístico oficial de la región.'
+      }
+    };
+
+    function abrirModal(clave) {
+      const d = INFO[clave];
+      document.getElementById('modal-emoji').textContent   = d.emoji;
+      document.getElementById('modal-titulo').textContent  = d.titulo;
+      document.getElementById('modal-texto').textContent   = d.texto;
+      document.getElementById('modal-overlay').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal-overlay').classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) cerrarModal();
+    });
+  </script>
+
+  <!-- Importancia -->
+  <div class="card">
+    <p class="section-head">🌎 Importancia para Riohacha y La Guajira</p>
+    <p>
+      El monumento es el punto de inicio oficial de la <strong>Ruta Gabo en Riohacha</strong>,
+      un recorrido turístico que une los lugares relacionados con la vida y obra de
+      García Márquez en la ciudad.
+    </p>
+    <br/>
+    <p>
+      Es un referente del patrimonio cultural local y símbolo de orgullo para La
+      Guajira. Aparece frecuentemente en desfiles y celebraciones del aniversario
+      de Riohacha, y la Alcaldía lo promueve como principal atractivo cultural y
+      turístico de la ciudad.
+    </p>
+    <br/>
+    <p>
+      También contribuye al desarrollo del turismo cultural, permitiendo que
+      visitantes de diferentes regiones y países conozcan aspectos importantes de
+      la historia y las tradiciones colombianas. Se ha convertido en un escenario
+      frecuente para actividades culturales, encuentros comunitarios y eventos
+      turísticos que fortalecen la imagen de Riohacha como destino atractivo en
+      la región Caribe.
+    </p>
+  </div>
+
+  <!-- Mapa -->
+  <div class="card">
+    <p class="section-head">📍 Ubicación</p>
+    <p style="margin-bottom:12px;">Parque Nicolás de Federmán · Avenida Primera, Riohacha, La Guajira.</p>
+    <a
+      href="https://maps.google.com/?q=Monumento+Mariposas+Amarillas+Riohacha+Parque+Nicolas+Federman"
+      target="_blank"
+      class="btn-secondary"
+      style="display:block; text-align:center; text-decoration:none;"
+    >
+      📍 Ver en Google Maps →
+    </a>
+  </div>
+
+  <!-- Volver al inicio -->
+  <a href="../index.html" class="btn-secondary" style="display:block; text-align:center; text-decoration:none; margin-top:1rem;">
+    ← Volver al inicio
+  </a>
+
+  <!-- Acceso administrador (discreto) -->
+  <div style="text-align:center; margin-top:2rem; padding-bottom:1rem;">
+    <a href="dashboard.html" style="font-size:12px; color:#ccc; text-decoration:none;">
+      Administración
+    </a>
+  </div>
+
+</div>
+
+<script>
+  function cambiarImg(thumb, src) {
+    document.getElementById('main-img').src = src;
+    document.querySelectorAll('.gallery-thumbs img').forEach(img => img.classList.remove('active'));
+    thumb.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

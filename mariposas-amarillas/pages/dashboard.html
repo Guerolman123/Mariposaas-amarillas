@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard · Mariposas Amarillas</title>
+  <link rel="stylesheet" href="../css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    canvas { max-height: 280px; width: 100% !important; }
+    .chart-wrap { margin-top: 1rem; overflow-x: hidden; }
+    .section-title {
+      font-size: 16px; font-weight: 600; color: #412402;
+      border-left: 4px solid #EF9F27; padding-left: 10px;
+      margin: 1.5rem 0 1rem;
+    }
+    .export-bar { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .btn-excel  { padding:9px 16px; background:#217346; border:none; border-radius:8px; color:#fff; font-size:13px; font-weight:600; cursor:pointer; }
+    .btn-excel:hover { background:#1a5c38; }
+    .btn-clear  { padding:9px 16px; background:transparent; border:1px solid #e00; border-radius:8px; color:#c00; font-size:13px; font-weight:600; cursor:pointer; }
+    .btn-logout { padding:9px 16px; background:transparent; border:1px solid #854F0B; border-radius:8px; color:#854F0B; font-size:13px; font-weight:600; cursor:pointer; }
+    .btn-logout:hover { background:#faeeda; }
+    .empty-state { text-align:center; padding:2rem; color:#888; font-size:14px; }
+    .medidas-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:1rem; }
+    .medida-card { background:#fff8ec; border:1px solid #FAC775; border-radius:10px; padding:12px; text-align:center; }
+    .medida-num  { font-size:18px; font-weight:700; color:#412402; }
+    .medida-lbl  { font-size:11px; color:#854F0B; margin-top:3px; }
+    .cruce-select { padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:1rem; width:100%; }
+    /* LOGIN */
+    #login-screen { min-height:80vh; display:flex; align-items:center; justify-content:center; }
+    .login-card { background:#fff; border:1px solid #e5e5e5; border-radius:16px; padding:2rem 1.75rem; width:100%; max-width:360px; text-align:center; }
+    .login-icon { font-size:40px; margin-bottom:.75rem; }
+    .login-card h2 { font-size:18px; font-weight:600; color:#412402; margin-bottom:4px; }
+    .login-card p  { font-size:13px; color:#888; margin-bottom:1.5rem; }
+    .login-card input[type="password"] { width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:8px; font-size:15px; margin-bottom:10px; outline:none; }
+    .login-card input:focus { border-color:#BA7517; }
+    .error-msg { font-size:13px; color:#c00; margin-bottom:10px; min-height:20px; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">🔒</div>
+    <h2>Acceso administrador</h2>
+    <p>Solo personal autorizado puede ver las estadísticas</p>
+    <input type="password" id="campo-password" placeholder="Ingresa la contraseña"
+           onkeydown="if(event.key==='Enter') verificarLogin()"/>
+    <p class="error-msg" id="error-msg"></p>
+    <button class="btn-primary" onclick="verificarLogin()">Entrar →</button>
+    <br/>
+    <a href="../index.html" style="display:block;margin-top:1rem;font-size:13px;color:#888;text-decoration:none;">← Volver al inicio</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-screen" class="hidden">
+<div class="page-wrap">
+
+  <nav class="nav-bar">
+    <span class="site-name">🦋 Mariposas Amarillas</span>
+    <div class="nav-links">
+      <a href="../index.html"  class="nav-link">Inicio</a>
+      <a href="monumento.html" class="nav-link">Monumento</a>
+      <span class="nav-link active">Dashboard</span>
+    </div>
+  </nav>
+
+  <div class="card" style="text-align:center;background:#faeeda;border-color:#EF9F27;">
+    <h1 style="font-size:18px;color:#412402;">📊 Dashboard estadístico</h1>
+    <p style="color:#633806;font-size:13px;">Monumento Mariposas Amarillas · Panel de administración</p>
+  </div>
+
+  <div class="export-bar">
+    <button class="btn-clear"  onclick="limpiarDatos()">🗑 Limpiar datos</button>
+    <button class="btn-logout" onclick="cerrarSesion()">🔓 Cerrar sesión</button>
+  </div>
+
+  <!-- ① INDICADORES GENERALES -->
+  <p class="section-title">① Indicadores generales</p>
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- ② MEDIDAS ESTADÍSTICAS -->
+  <p class="section-title">② Medidas estadísticas — Edad</p>
+  <div class="medidas-grid" id="medidas-edad"></div>
+
+  <!-- ③ TABLAS DE FRECUENCIA + GRÁFICOS -->
+  <p class="section-title">③ Tablas de frecuencia y gráficos</p>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="mostrarTab('edad',event)">Edad</button>
+    <button class="tab-btn" onclick="mostrarTab('procedencia',event)">Procedencia</button>
+    <button class="tab-btn" onclick="mostrarTab('tipo',event)">Tipo de visitante</button>
+    <button class="tab-btn" onclick="mostrarTab('registros',event)">Todos los registros</button>
+  </div>
+
+  <div id="tab-edad">
+    <div class="card">
+      <p class="section-head">👤 Distribución por edad</p>
+      <div id="tabla-edad"></div>
+      <div class="chart-wrap"><canvas id="chart-edad-bar"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-edad-hist"></canvas></div>
+    </div>
+  </div>
+
+  <div id="tab-procedencia" class="hidden">
+    <div class="card">
+      <p class="section-head">📍 Distribución por procedencia</p>
+      <div id="tabla-procedencia"></div>
+      <div class="chart-wrap"><canvas id="chart-proc-pie"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-proc-bar"></canvas></div>
+    </div>
+  </div>
+
+  <div id="tab-tipo" class="hidden">
+    <div class="card">
+      <p class="section-head">🪪 Distribución por tipo de visitante</p>
+      <div id="tabla-tipo"></div>
+      <div class="chart-wrap"><canvas id="chart-tipo-bar"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-tipo-pie"></canvas></div>
+    </div>
+  </div>
+
+  <div id="tab-registros" class="hidden">
+    <div class="card">
+      <p class="section-head">📋 Todos los registros</p>
+      <div id="tabla-registros"></div>
+    </div>
+  </div>
+
+  <!-- ④ CRUCE DE VARIABLES -->
+  <p class="section-title">④ Cruce de variables</p>
+  <div class="card">
+    <select class="cruce-select" id="cruce-selector" onchange="renderCruce()">
+      <option value="edad_procedencia">Edad vs Procedencia</option>
+      <option value="edad_tipo">Edad vs Tipo de visitante</option>
+      <option value="procedencia_tipo">Procedencia vs Tipo de visitante</option>
+      <option value="monumento_procedencia">Monumento vs Procedencia</option>
+      <option value="monumento_edad">Monumento vs Edad</option>
+    </select>
+    <div id="tabla-cruce"></div>
+    <div class="chart-wrap"><canvas id="chart-cruce"></canvas></div>
+  </div>
+
+</div>
+</div>
+
+<script type="module" src="../js/dashboard.js"></script>
+</body>
+</html>

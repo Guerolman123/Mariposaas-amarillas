@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mariposas Amarillas · Riohacha</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .pasos { display:flex; flex-direction:column; gap:12px; margin-bottom:1.75rem; text-align:left; }
+    .paso  { display:flex; align-items:flex-start; gap:12px; background:#faeeda; border-radius:10px; padding:12px 14px; }
+    .paso-num { background:#EF9F27; color:#fff; font-weight:700; font-size:13px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .paso-txt strong { display:block; font-size:13px; font-weight:600; color:#412402; margin-bottom:2px; }
+    .paso-txt span   { font-size:13px; color:#633806; line-height:1.5; }
+    .btn-form {
+      display:block; width:100%; background:#854F0B; color:#fff;
+      font-size:16px; font-weight:600; padding:14px; border:none;
+      border-radius:10px; cursor:pointer; text-decoration:none;
+      text-align:center; transition:background 0.15s; margin-bottom:12px;
+    }
+    .btn-form:hover { background:#633806; }
+    .btn-monumento {
+      display:none; width:100%; background:#1D9E75; color:#fff;
+      font-size:15px; font-weight:600; padding:13px; border:none;
+      border-radius:10px; cursor:pointer; text-decoration:none;
+      text-align:center; transition:background 0.15s;
+      animation: pulso 1.2s infinite;
+    }
+    .btn-monumento:hover { background:#158a62; }
+    @keyframes pulso {
+      0%,100% { box-shadow:0 0 0 0 rgba(29,158,117,0.4); }
+      50%      { box-shadow:0 0 0 8px rgba(29,158,117,0); }
+    }
+    .aviso {
+      display:none; background:#faeeda; border:1.5px solid #EF9F27;
+      border-radius:10px; padding:12px 14px; font-size:13px;
+      color:#633806; margin-bottom:1rem;
+    }
+    .privacy-note { font-size:11px; color:#aaa; margin-top:12px; text-align:center; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="hero-header">
+    <div class="hero-icon">🦋</div>
+    <h1>Mariposas Amarillas de Mauricio Babilonia</h1>
+    <p class="hero-sub">Monumento cultural · Riohacha, La Guajira</p>
+    <span class="badge">Homenaje a Gabriel García Márquez</span>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <h2 style="font-size:18px; font-weight:600; color:#412402; margin-bottom:0.5rem;">¡Bienvenido al monumento!</h2>
+    <p style="font-size:14px; color:#666; margin-bottom:1.5rem; line-height:1.6;">
+      Antes de continuar, completa un breve formulario anónimo con fines estadísticos. Solo toma 1 minuto.
+    </p>
+
+    <div class="pasos">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">
+          <strong>Llena el formulario</strong>
+          <span>Presiona el botón y completa las preguntas en Google Forms.</span>
+        </div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">
+          <strong>Envía el formulario</strong>
+          <span>Al enviarlo, regresa aquí. Aparecerá el botón para entrar al monumento.</span>
+        </div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">
+          <strong>Explora el monumento</strong>
+          <span>Conoce la historia, galería y significado cultural de las Mariposas Amarillas.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="aviso" id="aviso">
+      ✅ El formulario se abrió en una nueva pestaña. Complétalo y envíalo, luego presiona el botón verde.
+    </div>
+
+    <a id="btn-form"
+       href="https://forms.gle/EN3y3J8sN4eDUxw26"
+       target="_blank"
+       class="btn-form"
+       onclick="formAbierto()">
+      📋 Llenar el formulario →
+    </a>
+
+    <a href="pages/monumento.html" id="btn-monumento" class="btn-monumento">
+      ✅ Ya lo llené · Explorar el monumento →
+    </a>
+
+    <p class="privacy-note">🔒 Información 100% anónima · Solo con fines estadísticos académicos</p>
+  </div>
+
+</div>
+<script>
+  function formAbierto() {
+    setTimeout(() => {
+      document.getElementById('aviso').style.display        = 'block';
+      document.getElementById('btn-monumento').style.display = 'block';
+      document.getElementById('btn-form').textContent        = '📋 Volver a abrir el formulario';
+    }, 800);
+  }
+</script>
+</body>
+</html>
