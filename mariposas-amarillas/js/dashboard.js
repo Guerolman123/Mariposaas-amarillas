@@ -43,7 +43,7 @@ let DATOS_GLOBALES = [];
 const COLORES = ['#EF9F27','#854F0B','#BA7517','#FAC775','#633806','#1D9E75','#412402','#5DCAA5','#9FE1CB'];
 
 // ===== ORDEN NATURAL DE EDADES =====
-const ORDEN_EDAD = ["Menor de 18","Menor de 18 años","18 a 25","18 a 25 años","Entre 18 y 25","Entre 18 y 25 años","26 a 35","26 a 35 años","Entre 26 y 35","Entre 26 y 35 años","36 a 45","36 a 45 años","Entre 36 y 45","Entre 36 y 45 años","46 a 60","46 a 60 años","Entre 46 y 60","Entre 46 y 60 años","Mayor de 60","Mayor de 60 años"];
+const ORDEN_EDAD = ["Menor de 18 años","Entre 18 y 25 años","Entre 26 y 35 años","Entre 36 y 45 años","Entre 46 y 60 años","Mayor de 60 años"];
 
 // ===== CARGAR DATOS DESDE GOOGLE SHEETS =====
 async function cargarDatosFirebase() {
@@ -121,12 +121,15 @@ function calcularFrecuencias(datos, campo, orden) {
 // ===== MEDIDAS ESTADÍSTICAS =====
 // Para edad usamos el punto medio de cada rango
 const PUNTO_MEDIO = {
-  // Sin "años" (formato interno del formulario)
+  // Sin "años"
   'Menor de 18': 14, '18 a 25': 21.5, '26 a 35': 30.5,
   '36 a 45': 40.5, '46 a 60': 53, 'Mayor de 60': 65,
-  // Con "años" (formato que puede venir de Google Forms)
+  // Con "años"
   'Menor de 18 años': 14, '18 a 25 años': 21.5, '26 a 35 años': 30.5,
-  '36 a 45 años': 40.5, '46 a 60 años': 53, 'Mayor de 60 años': 65
+  '36 a 45 años': 40.5, '46 a 60 años': 53, 'Mayor de 60 años': 65,
+  // Con "Entre" (formato real de Google Forms)
+  'Entre 18 y 25 años': 21.5, 'Entre 26 y 35 años': 30.5,
+  'Entre 36 y 45 años': 40.5, 'Entre 46 y 60 años': 53
 };
 
 function calcularModa(frecuencias) {
@@ -143,12 +146,23 @@ function calcularMediaEdad(datos) {
 
 function calcularMedianaEdad(datos) {
   if (!datos.length) return '—';
-  const vals = datos.map(r => PUNTO_MEDIO[r.edad] || 0).filter(v => v > 0).sort((a,b) => a-b);
-  if (!vals.length) return '—';
-  const mid = Math.floor(vals.length / 2);
-  return vals.length % 2 !== 0
-    ? vals[mid].toFixed(1)
-    : ((vals[mid-1] + vals[mid]) / 2).toFixed(1);
+  // Contar frecuencia de cada rango directamente
+  const conteo = {};
+  datos.forEach(r => {
+    const edad = (r.edad || '').trim();
+    if (edad) conteo[edad] = (conteo[edad] || 0) + 1;
+  });
+  if (!Object.keys(conteo).length) return '—';
+  // Rango más frecuente
+  const moda = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0][0];
+  // Buscar punto medio con coincidencia flexible
+  const pm = PUNTO_MEDIO[moda];
+  if (pm !== undefined) return pm.toFixed(1);
+  // Intentar coincidencia parcial por los números del rango
+  for (const [key, val] of Object.entries(PUNTO_MEDIO)) {
+    if (moda.includes(key) || key.includes(moda)) return val.toFixed(1);
+  }
+  return '—';
 }
 
 // ===== ① KPIs =====
@@ -179,6 +193,13 @@ function renderKPIs(datos) {
 function renderMedidas(datos) {
   const el = document.getElementById('medidas-edad');
   if (!datos.length) { el.innerHTML = ''; return; }
+  // Diagnóstico visual: mostrar valores exactos en pantalla
+  const edadesUnicas = [...new Set(datos.map(r => r.edad))];
+  const diagEl = document.getElementById('diagnostico-edad') || document.createElement('div');
+  diagEl.id = 'diagnostico-edad';
+  diagEl.style = 'background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px;margin-bottom:1rem;font-size:12px;';
+  diagEl.innerHTML = '<strong>Diagnóstico edades (borrar después):</strong><br>' + edadesUnicas.map(e => `"${e}"`).join('<br>');
+  el.parentElement.insertBefore(diagEl, el);
   const freqEdad = calcularFrecuencias(datos, 'edad', ORDEN_EDAD);
   const media    = calcularMediaEdad(datos);
   const mediana  = calcularMedianaEdad(datos);
