@@ -303,7 +303,7 @@ function renderCruce() {
   if (sel === 'edad_tipo')         { campoFila = 'edad';        campoCol = 'tipo'; }
   if (sel === 'procedencia_tipo')  { campoFila = 'procedencia'; campoCol = 'tipo'; }
 
-  const valsFila = [...new Set(datos.map(r => r[campoFila]))].sort();
+  const valsFila = [...new Set(datos.map(r => r[campoFila]))].sort((a,b) => { if (campoFila === "edad") { const ia = ORDEN_EDAD.indexOf(a); const ib = ORDEN_EDAD.indexOf(b); return (ia===-1?999:ia)-(ib===-1?999:ib); } return a.localeCompare(b); });
   const valsCol  = [...new Set(datos.map(r => r[campoCol]))].sort();
 
   if (!valsFila.length || !valsCol.length) {
