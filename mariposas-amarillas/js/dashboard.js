@@ -43,7 +43,7 @@ let DATOS_GLOBALES = [];
 const COLORES = ['#EF9F27','#854F0B','#BA7517','#FAC775','#633806','#1D9E75','#412402','#5DCAA5','#9FE1CB'];
 
 // ===== ORDEN NATURAL DE EDADES =====
-const ORDEN_EDAD = ['Menor de 18','Menor de 18 años','18 a 25','18 a 25 años','26 a 35','26 a 35 años','36 a 45','36 a 45 años','46 a 60','46 a 60 años','Mayor de 60','Mayor de 60 años'];
+const ORDEN_EDAD = ["Menor de 18","Menor de 18 años","18 a 25","18 a 25 años","Entre 18 y 25","Entre 18 y 25 años","26 a 35","26 a 35 años","Entre 26 y 35","Entre 26 y 35 años","36 a 45","36 a 45 años","Entre 36 y 45","Entre 36 y 45 años","46 a 60","46 a 60 años","Entre 46 y 60","Entre 46 y 60 años","Mayor de 60","Mayor de 60 años"];
 
 // ===== CARGAR DATOS DESDE GOOGLE SHEETS =====
 async function cargarDatosFirebase() {
