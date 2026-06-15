@@ -43,7 +43,7 @@ let DATOS_GLOBALES = [];
 const COLORES = ['#EF9F27','#854F0B','#BA7517','#FAC775','#633806','#1D9E75','#412402','#5DCAA5','#9FE1CB'];
 
 // ===== ORDEN NATURAL DE EDADES =====
-const ORDEN_EDAD = ['Menor de 18','18 a 25','26 a 35','36 a 45','46 a 60','Mayor de 60'];
+const ORDEN_EDAD = ['Menor de 18','Menor de 18 años','18 a 25','18 a 25 años','26 a 35','26 a 35 años','36 a 45','36 a 45 años','46 a 60','46 a 60 años','Mayor de 60','Mayor de 60 años'];
 
 // ===== CARGAR DATOS DESDE GOOGLE SHEETS =====
 async function cargarDatosFirebase() {
@@ -158,7 +158,7 @@ function renderKPIs(datos) {
     el.innerHTML = '<p class="empty-state">Aún no hay registros. Escanea el QR para comenzar.</p>';
     return;
   }
-  const freqEdad = calcularFrecuencias(datos, 'edad');
+  const freqEdad = calcularFrecuencias(datos, 'edad', ORDEN_EDAD);
   const freqProc = calcularFrecuencias(datos, 'procedencia');
   const freqTipo = calcularFrecuencias(datos, 'tipo');
   const kpis = [
