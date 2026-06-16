@@ -121,15 +121,12 @@ function calcularFrecuencias(datos, campo, orden) {
 // ===== MEDIDAS ESTADÍSTICAS =====
 // Para edad usamos el punto medio de cada rango
 const PUNTO_MEDIO = {
-  // Sin "años"
-  'Menor de 18': 14, '18 a 25': 21.5, '26 a 35': 30.5,
-  '36 a 45': 40.5, '46 a 60': 53, 'Mayor de 60': 65,
-  // Con "años"
-  'Menor de 18 años': 14, '18 a 25 años': 21.5, '26 a 35 años': 30.5,
-  '36 a 45 años': 40.5, '46 a 60 años': 53, 'Mayor de 60 años': 65,
-  // Con "Entre" (formato real de Google Forms)
-  'Entre 18 y 25 años': 21.5, 'Entre 26 y 35 años': 30.5,
-  'Entre 36 y 45 años': 40.5, 'Entre 46 y 60 años': 53
+  'Menor de 18 años': 14,
+  'Entre 18 y 25 años': 21.5,
+  'Entre 26 y 35 años': 30.5,
+  'Entre 36 y 45 años': 40.5,
+  'Entre 46 y 60 años': 53,
+  'Mayor de 60 años': 65
 };
 
 function calcularModa(frecuencias) {
@@ -146,14 +143,8 @@ function calcularMediaEdad(datos) {
 
 function calcularMedianaEdad(datos) {
   if (!datos.length) return '—';
-  const conteo = {};
-  datos.forEach(r => {
-    const edad = (r.edad || '').trim();
-    if (edad) conteo[edad] = (conteo[edad] || 0) + 1;
-  });
-  if (!Object.keys(conteo).length) return '—';
-  const moda = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0][0];
-  return PUNTO_MEDIO[moda] !== undefined ? PUNTO_MEDIO[moda].toFixed(1) : '—';
+  // La mediana es la mitad del total de registros
+  return Math.floor(datos.length / 2);
 }
 
 // ===== ① KPIs =====
