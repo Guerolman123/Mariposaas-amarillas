@@ -182,7 +182,7 @@ function renderMedidas(datos) {
   const moda     = calcularModa(freqEdad);
   const cards = [
     { num: media,   lbl: 'Media (punto medio)' },
-    { num: mediana, lbl: 'Mediana (punto medio)' },
+    { num: mediana, lbl: 'Mediana (posicion)' },
     { num: moda,    lbl: 'Moda (rango más frecuente)' },
     { num: datos.length, lbl: 'N total' },
   ];
